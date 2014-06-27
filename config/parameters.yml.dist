@@ -1,0 +1,3 @@
+parameters:
+    hipchat_auth_token:
+    inactivity_limit_in_days:

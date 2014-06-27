@@ -1,0 +1,21 @@
+{
+    "require": {
+        "guzzlehttp/guzzle": "~4",
+        "incenteev/composer-parameter-handler": "~2.0",
+        "symfony/yaml": "~2.5",
+        "nesbot/Carbon": "*"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters"
+        ],
+        "post-update-cmd": [
+            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters"
+        ]
+    },
+    "extra": {
+        "incenteev-parameters": {
+            "file": "config/parameters.yml"
+        }
+    }
+}
