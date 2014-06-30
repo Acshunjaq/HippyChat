@@ -9,7 +9,7 @@ This script uses the [v2 HipChat API](https://www.hipchat.com/docs/apiv2) to
 ### Get up and running
 * Get composer: https://getcomposer.org/
 * Copy `parameters.ini.dist` to `parameters.ini` and add your v2 HipChat API token
-* Run `php src/archiver.php`
+* Run `php src/archive.php`
 
 ### Now?
 Add it to a cron somewhere and keep that room list neat!
