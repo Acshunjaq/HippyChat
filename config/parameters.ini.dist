@@ -1,0 +1,3 @@
+hipchat_auth_token          = SECRET_TOKEN
+inactivity_limit_in_days    = 60
+api_endpoint_url            = https://api.hipchat.com/v2/
