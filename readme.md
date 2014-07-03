@@ -18,5 +18,6 @@ Add it to a cron somewhere and keep that room list neat!
 ### Flags
 * Debug
     * `php src/archive.php debug` will show the uris formed and sent
+* Dry-run    
     * `php src/archive.php dry-run` will not archive, and will automatically enable debug mode
-        * Important: This is not a true 'dry-run' as it will still hit the API endpoints. However, it only hits 'read only' end-points and will not make any changes to HipChat 
+        * __Important__: This is not a true 'dry-run' as it will still hit the API endpoints. However, it only hits 'read only' end-points and will not make any changes to HipChat 
