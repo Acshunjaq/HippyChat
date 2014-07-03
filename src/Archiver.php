@@ -54,17 +54,22 @@ class Archiver
         }
 
         foreach ($rooms as $room) {
-            $lastActiveDate = $this->getLastActiveDate($room);
-            $diffInDays     = $this->now->diffInDays($lastActiveDate);
+            $lastActiveDate  = $this->getLastActiveDate($room);
+            $lastMessageDate = $this->getLastMessageDate($room);
 
-            if ($diffInDays >= $this->maxDays) {
+            $lastActiveDateDiff  = $this->now->diffInDays($lastActiveDate);
+            $lastMessageDateDiff = $this->now->diffInDays($lastMessageDate);
+
+            $lesserDiffInDays = $lastActiveDateDiff < $lastMessageDateDiff ? $lastActiveDateDiff : $lastMessageDateDiff;
+
+            if ($lesserDiffInDays >= $this->maxDays) {
                 $this->out(
-                    'Archiving: ' . $room['name'] . $this->humanDays($diffInDays)
+                    'Archiving: ' . $room['name'] . $this->humanDays($lesserDiffInDays)
                 );
                 $this->archive($room);
             } else {
                 $this->out(
-                    'Not Archiving: ' . $room['name'] . $this->humanDays($diffInDays)
+                    'Not Archiving: ' . $room['name'] . $this->humanDays($lesserDiffInDays)
                 );
             }
         }
@@ -113,6 +118,22 @@ class Archiver
     /**
      * @param $room
      *
+     * @return Carbon|null
+     */
+    protected function getLastMessageDate($room)
+    {
+        $roomMessage = $this->getLastRoomMessage($room);
+
+        if ($roomMessage) {
+            return new Carbon($roomMessage['date'], $this->dateTimeZone);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param $room
+     *
      * @return Carbon
      */
     protected function getLastActiveDate($room)
@@ -142,6 +163,31 @@ class Archiver
         }
 
         return $response->json();
+    }
+
+    /**
+     * @param $room
+     *
+     * @return mixed
+     */
+    protected function getLastRoomMessage($room)
+    {
+        $url = $this->apiEndpointUrl
+            . 'room/'
+            . $room['id']
+            . '/history'
+            . $this->authString
+            . '&max-results=1';
+
+        $response = $this->client->get($url);
+
+        if ($this->debug) {
+            $this->requestDebugInfo($url, $response);
+        }
+
+        $messages = $response->json();
+
+        return isset($messages['items'][0]) ? $messages['items'][0] : null;
     }
 
     /**
