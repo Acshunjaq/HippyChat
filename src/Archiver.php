@@ -12,20 +12,31 @@ class Archiver
     protected $now;
     protected $authString;
     protected $client;
+    protected $dryRun;
+    protected $debug;
 
     /**
-     * @param $apiEndpointUrl
-     * @param $token
-     * @param $maxDays
+     * @param      $apiEndpointUrl
+     * @param      $token
+     * @param int  $maxDays
+     * @param bool $debug
+     * @param bool $dryRun
      */
-    public function __construct($apiEndpointUrl, $token, $maxDays)
-    {
+    public function __construct(
+        $apiEndpointUrl,
+        $token,
+        $maxDays,
+        $debug = false,
+        $dryRun = false
+    ) {
         $this->apiEndpointUrl = $apiEndpointUrl;
         $this->token          = $token;
         $this->maxDays        = $maxDays;
         $this->authString     = '?auth_token=' . $this->token;
         $this->now            = new Carbon($this->dateTimeZone);
         $this->client         = new Client();
+        $this->debug          = $debug;
+        $this->dryRun         = $dryRun;
     }
 
     /**
@@ -33,10 +44,13 @@ class Archiver
      */
     public function run()
     {
+        if ($this->dryRun) {
+            $this->out('** Dry run - no archiving actions performed **');
+        }
         $rooms = $this->getRooms();
 
         if (count($rooms) <= 0) {
-            $this->out('No rooms found, exiting.');
+            $this->out('No rooms found, exiting');
         }
 
         foreach ($rooms as $room) {
@@ -89,6 +103,10 @@ class Archiver
         $response = $this->client->get($url);
         $rooms    = $response->json();
 
+        if ($this->debug) {
+            $this->requestDebugInfo($url, $response);
+        }
+
         return $rooms['items'];
     }
 
@@ -119,6 +137,10 @@ class Archiver
 
         $response = $this->client->get($url);
 
+        if ($this->debug) {
+            $this->requestDebugInfo($url, $response);
+        }
+
         return $response->json();
     }
 
@@ -143,8 +165,16 @@ class Archiver
 
         $url = $this->apiEndpointUrl . 'room/' . $room['id'] . $this->authString;
 
-        // Punch it!
-        $this->client->put($url, $payload);
+        if (!$this->dryRun) {
+            // Punch it!
+            $response = $this->client->put($url, $payload);
+
+            if ($this->debug) {
+                $this->requestDebugInfo($url, $response, $payload);
+            }
+        } else {
+            $this->requestDebugInfo($url);
+        }
     }
 
     /**
@@ -157,6 +187,10 @@ class Archiver
         $url      = $this->apiEndpointUrl . 'room/' . $room['id'] . $this->authString;
         $response = $this->client->get($url);
 
+        if ($this->debug) {
+            $this->requestDebugInfo($url, $response);
+        }
+
         return $response->json();
     }
 
@@ -166,5 +200,17 @@ class Archiver
     protected function out($msg)
     {
         echo $msg . PHP_EOL;
+    }
+
+    protected function requestDebugInfo($url, $response = null, $payload = null)
+    {
+        $pre  = "\x1B[90m";
+        $post = "\x1B[39m";
+        $this->out($pre . '### Begin debug info' . $post);
+        if ($payload) {
+            print_r($payload);
+        }
+        $this->out($pre . $url . ($response ? ' ' . $response->getStatusCode() : '') . $post);
+        $this->out($pre . '### End debug info' . $post);
     }
 }
